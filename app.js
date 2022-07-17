@@ -19,27 +19,32 @@ app.use((req, res, next) => {
   next();
 });
 
-// not found
-
-// for request urls not found
-app.use((req, res, next) => {
-  const error = new Error('Not found');
-  error.status = 404;
-  next(error);
-});
 
 // routes
 // add a new block to the chain
-app.post('/api/addBlock', async (req, res) => {
+
+app.get('/api/crypto', (req, res) => {
+  res.send('Welcome to Precious Coin Crypto!');
+})
+
+
+
+app.post('/api/crypto/addBlock', async (req, res) => {
   const { data } = req.body;
+  if (!data) {
+    return res.status(400).json({error: 'No data'});
+  };
   const newBlock = new Block(data);
   preciousCoin.addBlock(newBlock);
   res.send(newBlock);
 });
 
 // create a transaction
-app.post('/api/createTransaction', async (req, res) => {
+app.post('/api/crypto/createTransaction', async (req, res) => {
   const { amount, sender, recipient } = req.body;
+  if (!amount || !sender || !recipient) {
+    return res.status(400).json({error: 'No data'});
+  };
   const newTransaction = {
     id: randomstring.generate(10),
     amount,
@@ -50,6 +55,14 @@ app.post('/api/createTransaction', async (req, res) => {
   res.send(newTransaction);
 });
 
+// not found
+
+// for request urls not found
+app.use((req, res, next) => {
+  const error = new Error('Not found');
+  error.status = 404;
+  next(error);
+});
 // initialize port
 const port = process.env.PORT || 8000;
 
