@@ -5,12 +5,12 @@ const Block = require('./Block');
 class BlockChain {
     constructor() {
         this.chain = [this.createGenesisBlock()]; // create an array of blocks
-        this.difficulty = 2; // difficulty of the block chain. difficulty is the number of zeros in the hash.
+        this.difficulty = 0; // difficulty of the block chain. difficulty is the number of zeros in the hash.
     }
 
     // create a genesis block which is the first block in the chain
     createGenesisBlock() {
-        return new Block(0, "01/01/2017", "Genesis block", "0"); // index, timestamp, data, previousHash
+        return new Block({ index: 0, timestamp: "2017-01-01", data: "Genesis block", previousHash: "" }); // index, timestamp, data, previousHash
     }
 
     // to get the latest block in the chain
@@ -20,9 +20,7 @@ class BlockChain {
 
     // add a new block to the chain
     addBlock(newBlock) {
-        newBlock.previousHash = this.getLatestBlock().hash; // set the previous hash of the new block to the hash of the latest block
-        newBlock.hash = newBlock.calculateHash(); // calculate the hash of the new block
-        newBlock.mineBlock(this.difficulty); // mine the block
+        newBlock.mineBlock(this.difficulty); // mine the new block
         this.chain.push(newBlock); // add the new block to the chain
     };
 
@@ -34,12 +32,8 @@ class BlockChain {
             sender: transaction.sender, // sender of the transaction
             recipient: transaction.recipient // recipient of the transaction
         };
-        const newBlock = this.getLatestBlock(); // get the latest block
-        newBlock.data.push(newTransaction); // add the transaction to the data of the latest block
-        newBlock.hash = newBlock.calculateHash(); // calculate the hash of the latest block
-        newBlock.previousHash = newBlock.previousHash; // set the previous hash of the latest block to the previous hash of the latest block
-        newBlock.mineBlock(this.difficulty); // mine the latest block
-        this.chain.push(newBlock); // add the latest block to the chain
+        let latestBlock = this.getLatestBlock(); // get the latest block
+        this.addBlock(new Block({ index: latestBlock.index + 1, data: newTransaction, timestamp: new Date().toISOString(0, 10), previousHash: latestBlock.hash })); // add a new block to the chain with the transaction
     };
 
     // check if the chain is valid
@@ -75,35 +69,18 @@ class BlockChain {
         }
     };
 
-    // get the block with the given transaction
-    getBlockByTransaction(transaction) {
-        for (let i = 0; i < this.chain.length; i++) { // loop through the chain
-            for (let j = 0; j < this.chain[i].data.length; j++) { // loop through the data of the current block
-                if (this.chain[i].data[j].id === transaction.id) { // check if the current transaction's id is equal to the transaction we are looking for
-                    return this.chain[i];
-                }
-            }
-        }
-    };
-
     // get the index of the block with the given hash
     getBlockIndexByHash(hash) {
         for (let i = 0; i < this.chain.length; i++) { // loop through the chain
             if (this.chain[i].hash === hash) { // check if the hash of the current block is equal to the hash of the block we are looking for
-                return i; // if so return the index of the block
+                return this.chain[i].index; // if so return the index of the block
             }
         }
     };
 
-    // get the index of the block with the given transaction
-    getBlockIndex(transaction) {
-        for (let i = 0; i < this.chain.length; i++) { // loop through the chain
-            for (let j = 0; j < this.chain[i].data.length; j++) { // loop through the data of the current block
-                if (this.chain[i].data[j].id === transaction.id) { // check if the current transaction's id is equal to the transaction we are looking for
-                    return i;
-                }
-            }
-        }
+    // get chain
+    getChain() {
+        return this.chain; // return the chain
     };
 };
 
